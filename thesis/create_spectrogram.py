@@ -38,22 +38,43 @@ def create_spectrograms_from_audio_dataset(dataset: tf.data.Dataset, sample_rate
       map_func=lambda audio,label: (create_log_mel_sprectrogram(audio, sample_rate), label),
       num_parallel_calls=tf.data.AUTOTUNE)
 
-def extract_patches_from_image(images, patch_size):
-    images = tf.expand_dims(images,0)
+
+def extract_patches_from_image(images, patch_size=8):
+    images = tf.expand_dims(images,-1)
     patches = tf.image.extract_patches(images, 
-                                       sizes=[1, 8, 8, 1], 
-                                       strides=[1, 8, 8, 1], 
+                                       sizes=[1, patch_size, patch_size, 1], 
+                                       strides=[1, patch_size, patch_size, 1], 
                                        rates=[1, 1, 1, 1],
                                        padding='VALID')
     return patches
 
-def create_spectrogram_patches_from_audio_dataset(dataset: tf.data.Dataset, sample_rate = 16000, patch_size=[32, 8, 8, 1], strides=[1, 8, 8, 1]):
+
+def extract_patches_from_audio_dataset(dataset: tf.data.Dataset, sample_rate = 16000, patch_size=8):
     dataset_without_color_channel = dataset.map(squeeze, tf.data.AUTOTUNE)
-    dataset_spectrograms = dataset_without_color_channel.map(
-                            map_func=lambda audio,label: (create_log_mel_sprectrogram(audio, sample_rate), label),
-                            num_parallel_calls=tf.data.AUTOTUNE)
-    dataset_patches = dataset_spectrograms.map(
-                            map_func=lambda spectrogram,label: (extract_patches_from_image(spectrogram, patch_size), label),
-                            num_parallel_calls=tf.data.AUTOTUNE
-    )
-    return dataset_patches
+    spectrogram_dataset = dataset_without_color_channel.map(
+      map_func=lambda audio,label: (create_log_mel_sprectrogram(audio, sample_rate), label),
+      num_parallel_calls=tf.data.AUTOTUNE)
+    return spectrogram_dataset.map(
+      map_func=lambda mel_spec,label: (extract_patches_from_image(mel_spec, patch_size), label),
+      num_parallel_calls=tf.data.AUTOTUNE)
+
+
+# def extract_patches_from_image(images, patch_size):
+#     images = tf.expand_dims(images,0)
+#     patches = tf.image.extract_patches(images, 
+#                                        sizes=[1, 8, 8, 1], 
+#                                        strides=[1, 8, 8, 1], 
+#                                        rates=[1, 1, 1, 1],
+#                                        padding='VALID')
+#     return patches
+
+# def create_spectrogram_patches_from_audio_dataset(dataset: tf.data.Dataset, sample_rate = 16000, patch_size=[32, 8, 8, 1], strides=[1, 8, 8, 1]):
+#     dataset_without_color_channel = dataset.map(squeeze, tf.data.AUTOTUNE)
+#     dataset_spectrograms = dataset_without_color_channel.map(
+#                             map_func=lambda audio,label: (create_log_mel_sprectrogram(audio, sample_rate), label),
+#                             num_parallel_calls=tf.data.AUTOTUNE)
+#     dataset_patches = dataset_spectrograms.map(
+#                             map_func=lambda spectrogram,label: (extract_patches_from_image(spectrogram, patch_size), label),
+#                             num_parallel_calls=tf.data.AUTOTUNE
+#     )
+#     return dataset_patches

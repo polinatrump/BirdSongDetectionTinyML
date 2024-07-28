@@ -252,6 +252,42 @@ def create_spectrogram_features(audio, desired_length, sample_rate):
     log_mel_spectrogram_with_color_channel = tf.expand_dims(log_mel_spectrogram, axis=-1).numpy()
     return log_mel_spectrogram_with_color_channel
 
+def create_spectrogram_patches(audio, desired_length, sample_rate):
+    # Make all audios the same length 
+    # audio, _ = squeeze(audio)
+    audio_length = tf.shape(audio)[0]
+    if audio_length < desired_length:
+        audio = tf.pad(audio, [[0, desired_length - audio_length]], mode='CONSTANT')
+    else:
+        audio = audio[:desired_length]
+
+    #Create log Mel spectrogram
+    stfts = tf.signal.stft(audio, frame_length=1024, frame_step=256,
+                       fft_length=1024)
+    spectrogram = tf.abs(stfts)
+    # Warp the linear scale spectrogram into the mel-scale.
+    num_spectrogram_bins = stfts.shape[-1]
+    lower_edge_hertz, upper_edge_hertz, num_mel_bins = 80.0, 8000.0, 80
+    linear_to_mel_weight_matrix = tf.signal.linear_to_mel_weight_matrix(
+        num_mel_bins, num_spectrogram_bins, sample_rate, lower_edge_hertz,
+        upper_edge_hertz)
+    mel_spectrogram = tf.tensordot(
+    spectrogram, linear_to_mel_weight_matrix, 1)
+    mel_spectrogram.set_shape(spectrogram.shape[:-1].concatenate(
+    linear_to_mel_weight_matrix.shape[-1:]))
+    # Compute a stabilized log to get log-magnitude mel-scale spectrograms.
+    log_mel_spectrogram = tf.math.log(mel_spectrogram + 1e-6)
+    # Get back color channel axis to make features accetable for the model input shape
+    log_mel_spectrogram_with_color_channel = tf.expand_dims(log_mel_spectrogram, axis=-1)
+    log_mel_spectrogram_with_color_channel = tf.expand_dims(log_mel_spectrogram_with_color_channel, axis=0)
+    patches = tf.image.extract_patches(log_mel_spectrogram_with_color_channel, 
+                                       sizes=[1, 8, 8, 1], 
+                                       strides=[1, 8, 8, 1], 
+                                       rates=[1, 1, 1, 1],
+                                       padding='VALID')
+    patches = tf.squeeze(patches, axis=0)
+    # log_mel_spectrogram_with_color_channel = tf.expand_dims(log_mel_spectrogram, axis=-1).numpy()
+    return patches
 
 def run_full_int_q_tflite_model(tflite_file, indices, x_data):
   # Initialize the interpreter
