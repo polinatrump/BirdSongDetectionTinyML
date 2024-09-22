@@ -2,7 +2,6 @@ To achieve the goal of the thesis, we implement different Neural Network (NN) ar
 
 All model files are located in folder "models"
 
-In "notebooks" folder the development of all architectures is presented. 
+In "notebooks" folder the development of all architectures is presented.
 
 In "notebooks.additional.results_with_calibrated_thresholds.ipynb" evaluation results of the models are presented.
-

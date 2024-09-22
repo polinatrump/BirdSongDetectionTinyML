@@ -82,17 +82,17 @@
 #     return Model(inputs=inputs, outputs=logits)
 
 import math
+
+# import tensorflow_addons as tfa
+import matplotlib.pyplot as plt
 import numpy as np
 import tensorflow as tf
 from tensorflow import keras
-# import tensorflow_addons as tfa
-import matplotlib.pyplot as plt
 from tensorflow.keras import layers
 
+
 class PatchEncoder(layers.Layer):
-    def __init__(
-        self, num_patches, projection_dim, **kwargs
-    ):
+    def __init__(self, num_patches, projection_dim, **kwargs):
         super().__init__(**kwargs)
         self.num_patches = num_patches
         self.position_embedding = layers.Embedding(
@@ -105,11 +105,13 @@ class PatchEncoder(layers.Layer):
         encoded_patches = encoded_patches + encoded_positions
         return encoded_patches
 
+
 def mlp(x, hidden_units, dropout_rate):
     for units in hidden_units:
         x = layers.Dense(units, activation=tf.nn.gelu)(x)
         x = layers.Dropout(dropout_rate)(x)
     return x
+
 
 class PatchTokenization(layers.Layer):
     def __init__(
@@ -138,9 +140,22 @@ class PatchTokenization(layers.Layer):
         tokens = self.projection(flat_patches)
         return tokens
 
-def create_vit_classifier(input_shape, num_classes, patch_size, num_patches, projection_dim, num_heads, transformer_layers, transformer_units, mlp_head_units):
+
+def create_vit_classifier(
+    input_shape,
+    num_classes,
+    patch_size,
+    num_patches,
+    projection_dim,
+    num_heads,
+    transformer_layers,
+    transformer_units,
+    mlp_head_units,
+):
     inputs = layers.Input(shape=input_shape)
-    tokens = PatchTokenization(input_shape, patch_size, num_patches, projection_dim)(inputs)
+    tokens = PatchTokenization(
+        input_shape, patch_size, num_patches, projection_dim
+    )(inputs)
     # Encode patches.
     encoded_patches = PatchEncoder(num_patches, projection_dim)(tokens)
 
@@ -166,7 +181,9 @@ def create_vit_classifier(input_shape, num_classes, patch_size, num_patches, pro
     representation = layers.Flatten()(representation)
     representation = layers.Dropout(0.5)(representation)
     # Add MLP.
-    features = mlp(representation, hidden_units=mlp_head_units, dropout_rate=0.5)
+    features = mlp(
+        representation, hidden_units=mlp_head_units, dropout_rate=0.5
+    )
     # Classify outputs.
     logits = layers.Dense(num_classes)(features)
     # Create the Keras model.
