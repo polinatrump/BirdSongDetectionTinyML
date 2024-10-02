@@ -2,15 +2,20 @@ import tracemalloc
 
 import numpy as np
 import tensorflow as tf
-from create_spectrogram import (create_spectrograms_from_audio_dataset,
-                                extract_patches_from_audio_dataset)
-from helper_functions import (convert_bytes,
-                              convert_prefetchdataset_to_numpy_arrays,
-                              evaluate_prediction,
-                              evaluate_prediction_with_threshold,
-                              find_decision_threshold, get_file_size,
-                              lite_model_from_file_predicts_dataset,
-                              predict_and_print_full_results)
+from create_spectrogram import (
+    create_spectrograms_from_audio_dataset,
+    extract_patches_from_audio_dataset,
+)
+from helper_functions import (
+    convert_bytes,
+    convert_prefetchdataset_to_numpy_arrays,
+    evaluate_prediction,
+    evaluate_prediction_with_threshold,
+    find_decision_threshold,
+    get_file_size,
+    lite_model_from_file_predicts_dataset,
+    predict_and_print_full_results,
+)
 
 
 # @profile(precision=4)
@@ -41,9 +46,7 @@ def run_full_int_q_tflite_model(tflite_file, indices, x_data):
         interpreter.invoke()
         output = interpreter.get_tensor(output_details["index"])[0]
         current, peak = tracemalloc.get_traced_memory()
-        print(
-            f"Current memory usage: {current / 10**6}MB; Peak: {peak / 10**6}MB"
-        )
+        print(f"Current memory usage: {current / 10**6}MB; Peak: {peak / 10**6}MB")
         # predictions_class[i] = output.argmax()
         # predictions_prob[i] = output[1]
 

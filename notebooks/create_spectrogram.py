@@ -18,9 +18,7 @@ def squeeze(audio, labels=None):
 
 
 def create_log_mel_sprectrogram(signals, sample_rate=16000):
-    stfts = tf.signal.stft(
-        signals, frame_length=1024, frame_step=256, fft_length=1024
-    )
+    stfts = tf.signal.stft(signals, frame_length=1024, frame_step=256, fft_length=1024)
     spectrograms = tf.abs(stfts)
 
     num_spectrogram_bins = stfts.shape[-1]
@@ -32,22 +30,16 @@ def create_log_mel_sprectrogram(signals, sample_rate=16000):
         lower_edge_hertz,
         upper_edge_hertz,
     )
-    mel_spectrograms = tf.tensordot(
-        spectrograms, linear_to_mel_weight_matrix, 1
-    )
+    mel_spectrograms = tf.tensordot(spectrograms, linear_to_mel_weight_matrix, 1)
     mel_spectrograms.set_shape(
-        spectrograms.shape[:-1].concatenate(
-            linear_to_mel_weight_matrix.shape[-1:]
-        )
+        spectrograms.shape[:-1].concatenate(linear_to_mel_weight_matrix.shape[-1:])
     )
 
     log_mel_spectrograms = tf.math.log(mel_spectrograms + 1e-6)
     return log_mel_spectrograms
 
 
-def create_spectrograms_from_audio_dataset(
-    dataset: tf.data.Dataset, sample_rate=16000
-):
+def create_spectrograms_from_audio_dataset(dataset: tf.data.Dataset, sample_rate=16000):
     dataset_without_color_channel = dataset.map(squeeze, tf.data.AUTOTUNE)
     return dataset_without_color_channel.map(
         map_func=lambda audio, label: (

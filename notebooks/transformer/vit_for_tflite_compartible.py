@@ -97,9 +97,7 @@ def create_vit_classifier(
     representation = layers.Flatten()(representation)
     representation = layers.Dropout(0.5)(representation)
     # Add MLP.
-    features = mlp(
-        representation, hidden_units=mlp_head_units, dropout_rate=0.5
-    )
+    features = mlp(representation, hidden_units=mlp_head_units, dropout_rate=0.5)
     # Classify outputs.
     logits = layers.Dense(num_classes)(features)
     # Create the Keras model.

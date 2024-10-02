@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 SqueezeNet implemented in Keras
 
@@ -12,8 +11,17 @@ This implementation is based on the original paper.
 """
 
 import keras.backend as K
-from keras.layers import (Activation, Add, Concatenate, Conv2D, Dropout,
-                          Flatten, GlobalAveragePooling2D, Input, MaxPooling2D)
+from keras.layers import (
+    Activation,
+    Add,
+    Concatenate,
+    Conv2D,
+    Dropout,
+    Flatten,
+    GlobalAveragePooling2D,
+    Input,
+    MaxPooling2D,
+)
 from keras.models import Model
 
 __version__ = "0.0.1"
@@ -138,9 +146,7 @@ def SqueezeNet_11(input_shape, nb_classes, dropout_rate=None, compression=1.0):
 
 
 def output(x, nb_classes):
-    x = Conv2D(
-        nb_classes, (1, 1), strides=(1, 1), padding="valid", name="conv10"
-    )(x)
+    x = Conv2D(nb_classes, (1, 1), strides=(1, 1), padding="valid", name="conv10")(x)
     x = GlobalAveragePooling2D(name="avgpool10")(x)
     x = Activation("softmax", name="softmax")(x)
     return x

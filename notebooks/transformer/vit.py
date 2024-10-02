@@ -153,9 +153,9 @@ def create_vit_classifier(
     mlp_head_units,
 ):
     inputs = layers.Input(shape=input_shape)
-    tokens = PatchTokenization(
-        input_shape, patch_size, num_patches, projection_dim
-    )(inputs)
+    tokens = PatchTokenization(input_shape, patch_size, num_patches, projection_dim)(
+        inputs
+    )
     # Encode patches.
     encoded_patches = PatchEncoder(num_patches, projection_dim)(tokens)
 
@@ -181,9 +181,7 @@ def create_vit_classifier(
     representation = layers.Flatten()(representation)
     representation = layers.Dropout(0.5)(representation)
     # Add MLP.
-    features = mlp(
-        representation, hidden_units=mlp_head_units, dropout_rate=0.5
-    )
+    features = mlp(representation, hidden_units=mlp_head_units, dropout_rate=0.5)
     # Classify outputs.
     logits = layers.Dense(num_classes)(features)
     # Create the Keras model.

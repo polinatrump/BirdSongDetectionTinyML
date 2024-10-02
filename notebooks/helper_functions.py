@@ -4,8 +4,14 @@ import time
 
 import numpy as np
 import tensorflow as tf
-from sklearn.metrics import (accuracy_score, f1_score, fbeta_score,
-                             precision_score, recall_score, roc_curve)
+from sklearn.metrics import (
+    accuracy_score,
+    f1_score,
+    fbeta_score,
+    precision_score,
+    recall_score,
+    roc_curve,
+)
 
 tf.random.set_seed(3407)
 np.random.seed(3407)
@@ -22,9 +28,7 @@ def convert_bytes(size, unit=None):
         print("File size: " + str(round(size / 1024, 3)) + " Kilobytes")
         return str(round(size / 1024, 3)) + " Kilobytes"
     elif unit == "MB":
-        return print(
-            "File size: " + str(round(size / (1024 * 1024), 3)) + " Megabytes"
-        )
+        return print("File size: " + str(round(size / (1024 * 1024), 3)) + " Megabytes")
     else:
         return print("File size: " + str(size) + " bytes")
 
@@ -73,9 +77,7 @@ def lite_model_predict_dataset(
     return pred_labels
 
 
-def convert_prefetchdataset_to_numpy_arrays(
-    prefetchdataset, data_type="spectrogram"
-):
+def convert_prefetchdataset_to_numpy_arrays(prefetchdataset, data_type="spectrogram"):
     x_list = []
     y_list = []
     for batch in prefetchdataset:
@@ -107,13 +109,9 @@ def evaluate_prediction_with_threshold(
 
     accuracy = accuracy_score(y_true, y_pred_optimal_threshold)
     recall = recall_score(y_true, y_pred_optimal_threshold, average="binary")
-    precision = precision_score(
-        y_true, y_pred_optimal_threshold, average="binary"
-    )
+    precision = precision_score(y_true, y_pred_optimal_threshold, average="binary")
     f1score = f1_score(y_true, y_pred_optimal_threshold, average="binary")
-    f2score = fbeta_score(
-        y_true, y_pred_optimal_threshold, average="binary", beta=2
-    )
+    f2score = fbeta_score(y_true, y_pred_optimal_threshold, average="binary", beta=2)
 
     print(f"Accuracy: {accuracy * 100:.2f}%")
     print(f"Recall: {recall * 100:.2f}%")
@@ -142,9 +140,7 @@ def get_f1_scores_of_bootstraping_partitions(
     f1_scores = []
     n_samples = len(y_true)
     for _ in range(n_bootstrap):
-        indices = np.random.choice(
-            n_samples, size=n_chosen_samples, replace=True
-        )
+        indices = np.random.choice(n_samples, size=n_chosen_samples, replace=True)
         if model_format == "keras":
             y_pred_prob = model.predict(x_data[indices], verbose=0)
             y_pred = tf.argmax(y_pred_prob, axis=1).numpy()
@@ -166,7 +162,7 @@ def get_f1_scores_of_non_overlapping_partitions(
     for i in range(n_partitions):
         start = i * partition_size
         end = start + partition_size
-        partitions.append((np.arange(start, end)))
+        partitions.append(np.arange(start, end))
 
     f1_scores = []
 
@@ -223,10 +219,8 @@ def predict_and_print_full_results(
     print(
         "\nDevide dataset into 10 non-overlapping patritions and get their mean F1-score"
     )
-    non_overlap_patritions_f1_scores = (
-        get_f1_scores_of_non_overlapping_partitions(
-            model, x_data, y_true, model_format, input_data_uint8_type
-        )
+    non_overlap_patritions_f1_scores = get_f1_scores_of_non_overlapping_partitions(
+        model, x_data, y_true, model_format, input_data_uint8_type
     )
     print(
         "Non-overlap mean F1-score: ",
@@ -288,9 +282,7 @@ def evaluate_time_of_prediction(
             elapsed_time = time.time() - start_time
         elif model_format == "tf_lite":
             start_time = time.time()
-            y_pred = tf_lite_model_predict(
-                model, [x_data[i]], input_data_uint8_type
-            )
+            y_pred = tf_lite_model_predict(model, [x_data[i]], input_data_uint8_type)
             elapsed_time = time.time() - start_time
         time_data.append(elapsed_time)
 
@@ -347,16 +339,12 @@ def create_spectrogram_features(audio, desired_length, sample_rate):
     # audio, _ = squeeze(audio)
     audio_length = tf.shape(audio)[0]
     if audio_length < desired_length:
-        audio = tf.pad(
-            audio, [[0, desired_length - audio_length]], mode="CONSTANT"
-        )
+        audio = tf.pad(audio, [[0, desired_length - audio_length]], mode="CONSTANT")
     else:
         audio = audio[:desired_length]
 
     # Create log Mel spectrogram
-    stfts = tf.signal.stft(
-        audio, frame_length=1024, frame_step=256, fft_length=1024
-    )
+    stfts = tf.signal.stft(audio, frame_length=1024, frame_step=256, fft_length=1024)
     spectrogram = tf.abs(stfts)
     # Warp the linear scale spectrogram into the mel-scale.
     num_spectrogram_bins = stfts.shape[-1]
@@ -370,9 +358,7 @@ def create_spectrogram_features(audio, desired_length, sample_rate):
     )
     mel_spectrogram = tf.tensordot(spectrogram, linear_to_mel_weight_matrix, 1)
     mel_spectrogram.set_shape(
-        spectrogram.shape[:-1].concatenate(
-            linear_to_mel_weight_matrix.shape[-1:]
-        )
+        spectrogram.shape[:-1].concatenate(linear_to_mel_weight_matrix.shape[-1:])
     )
     # Compute a stabilized log to get log-magnitude mel-scale spectrograms.
     log_mel_spectrogram = tf.math.log(mel_spectrogram + 1e-6)
@@ -388,16 +374,12 @@ def create_spectrogram_patches(audio, desired_length, sample_rate):
     # audio, _ = squeeze(audio)
     audio_length = tf.shape(audio)[0]
     if audio_length < desired_length:
-        audio = tf.pad(
-            audio, [[0, desired_length - audio_length]], mode="CONSTANT"
-        )
+        audio = tf.pad(audio, [[0, desired_length - audio_length]], mode="CONSTANT")
     else:
         audio = audio[:desired_length]
 
     # Create log Mel spectrogram
-    stfts = tf.signal.stft(
-        audio, frame_length=1024, frame_step=256, fft_length=1024
-    )
+    stfts = tf.signal.stft(audio, frame_length=1024, frame_step=256, fft_length=1024)
     spectrogram = tf.abs(stfts)
     # Warp the linear scale spectrogram into the mel-scale.
     num_spectrogram_bins = stfts.shape[-1]
@@ -411,9 +393,7 @@ def create_spectrogram_patches(audio, desired_length, sample_rate):
     )
     mel_spectrogram = tf.tensordot(spectrogram, linear_to_mel_weight_matrix, 1)
     mel_spectrogram.set_shape(
-        spectrogram.shape[:-1].concatenate(
-            linear_to_mel_weight_matrix.shape[-1:]
-        )
+        spectrogram.shape[:-1].concatenate(linear_to_mel_weight_matrix.shape[-1:])
     )
     # Compute a stabilized log to get log-magnitude mel-scale spectrograms.
     log_mel_spectrogram = tf.math.log(mel_spectrogram + 1e-6)
@@ -480,7 +460,7 @@ def get_f1_scores_of_non_overlapping_partitions_full_int_q(
     for i in range(n_partitions):
         start = i * partition_size
         end = start + partition_size
-        partitions.append((np.arange(start, end)))
+        partitions.append(np.arange(start, end))
 
     f1_scores = []
 
@@ -498,9 +478,7 @@ def get_f1_scores_of_bootstraping_partitions_full_int_q(
     f1_scores = []
     n_samples = len(y_true)
     for _ in range(n_bootstrap):
-        indices = np.random.choice(
-            n_samples, size=n_chosen_samples, replace=True
-        )
+        indices = np.random.choice(n_samples, size=n_chosen_samples, replace=True)
         y_pred = full_int_model_predict(tflite_file, x_data[indices])
         f1 = f1_score(y_true[indices], y_pred)
         f1_scores.append(f1)
